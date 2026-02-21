@@ -1,36 +1,28 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:myapp/screens/add_activity_screen.dart';
 import 'package:myapp/screens/analytics_screen.dart';
 import 'package:myapp/screens/dashboard_screen.dart';
 import 'package:myapp/screens/history_screen.dart';
 import 'package:myapp/screens/home_screen.dart';
-import 'package:myapp/screens/profile_screen.dart';
+import 'package:myapp/screens/settings/settings_screen.dart';
+import 'package:myapp/services/database_service.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/providers/theme_provider.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MobileAds.instance.initialize();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await DatabaseService.initDatabase();
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
       child: const MyApp(),
     ),
   );
-}
-
-class ThemeProvider with ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.system;
-
-  ThemeMode get themeMode => _themeMode;
-
-  void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners();
-  }
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -77,9 +69,9 @@ final _router = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/profile',
+              path: '/settings',
               pageBuilder: (context, state) => const NoTransitionPage(
-                child: ProfileScreen(),
+                child: SettingsScreen(),
               ),
             ),
           ],
@@ -133,7 +125,7 @@ class MyApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withAlpha(25),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: Colors.white,
       ),
@@ -181,7 +173,7 @@ class MyApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.2),
+        shadowColor: Colors.black.withAlpha(51),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: const Color(0xFF1E293B),
       ),

@@ -1,9 +1,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
-import 'package:myapp/data/activity_data.dart';
 import 'package:myapp/models/activity.dart';
+import 'package:myapp/services/database_service.dart';
 
 class AddActivityScreen extends StatefulWidget {
   const AddActivityScreen({super.key});
@@ -15,8 +16,8 @@ class AddActivityScreen extends StatefulWidget {
 class _AddActivityScreenState extends State<AddActivityScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _activityType;
-  double? _distance;
-  Duration? _duration;
+  int? _duration;
+  int? _calories;
   DateTime _dateTime = DateTime.now();
 
   final List<String> _activityTypes = ['Walking', 'Running', 'Cycling', 'Swimming', 'Workout'];
@@ -42,17 +43,42 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+
+      // Estimate calories if not provided
+      if (_calories == null && _duration != null) {
+        _calories = _estimateCalories(_activityType!, _duration!);
+      }
+
       final newActivity = Activity(
         type: _activityType!,
-        distance: _distance ?? 0.0,
-        duration: _duration ?? Duration.zero,
+        duration: _duration ?? 0,
+        calories: _calories ?? 0,
+        distance: 0, // No distance tracking for now
         timestamp: _dateTime,
       );
-      ActivityData.addActivity(newActivity);
+      
+      Hive.box<Activity>(DatabaseService.activitiesBoxName).add(newActivity);
       context.pop();
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Activity added successfully!')),
       );
+    }
+  }
+
+  int _estimateCalories(String activityType, int duration) {
+    // A very rough estimation
+    switch (activityType) {
+      case 'Running':
+        return duration * 10;
+      case 'Cycling':
+        return duration * 8;
+      case 'Swimming':
+        return duration * 12;
+      case 'Workout':
+        return duration * 5;
+      case 'Walking':
+      default:
+        return duration * 4;
     }
   }
 
@@ -68,75 +94,81 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-           return Center(
+          return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 600),
               child: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Activity Type'),
-                      value: _activityType,
-                      items: _activityTypes.map((String type) {
-                        return DropdownMenuItem<String>(value: type, child: Text(type));
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          _activityType = newValue;
-                        });
-                      },
-                      validator: (value) => value == null ? 'Please select an activity type' : null,
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      decoration: const InputDecoration(labelText: 'Distance (km)', suffixText: 'km'),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      onSaved: (value) => _distance = double.tryParse(value!),
-                    ),
-                    const SizedBox(height: 20),
-                     TextFormField(
-                      decoration: const InputDecoration(labelText: 'Duration (minutes)'),
-                      keyboardType: TextInputType.number,
-                      onSaved: (value) => _duration = Duration(minutes: int.tryParse(value!) ?? 0),
-                    ),
-                    const SizedBox(height: 30),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => _selectDate(context),
-                            child: InputDecorator(
-                              decoration: const InputDecoration(labelText: 'Date'),
-                              child: Text(DateFormat.yMMMd().format(_dateTime)),
+                key: _formKey,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(labelText: 'Activity Type'),
+                        initialValue: _activityType,
+                        items: _activityTypes.map((String type) {
+                          return DropdownMenuItem<String>(value: type, child: Text(type));
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            _activityType = newValue;
+                          });
+                        },
+                        validator: (value) => value == null ? 'Please select an activity type' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        decoration: const InputDecoration(labelText: 'Duration (minutes)'),
+                        keyboardType: TextInputType.number,
+                        onSaved: (value) => _duration = int.tryParse(value!),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a duration';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        decoration: const InputDecoration(labelText: 'Calories Burned (optional)'),
+                        keyboardType: TextInputType.number,
+                        onSaved: (value) => _calories = int.tryParse(value!),
+                      ),
+                      const SizedBox(height: 30),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => _selectDate(context),
+                              child: InputDecorator(
+                                decoration: const InputDecoration(labelText: 'Date'),
+                                child: Text(DateFormat.yMMMd().format(_dateTime)),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => _selectTime(context),
-                            child: InputDecorator(
-                              decoration: const InputDecoration(labelText: 'Time'),
-                              child: Text(DateFormat.jm().format(_dateTime)),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => _selectTime(context),
+                              child: InputDecorator(
+                                decoration: const InputDecoration(labelText: 'Time'),
+                                child: Text(DateFormat.jm().format(_dateTime)),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
-                    ElevatedButton(
-                      onPressed: _submitForm,
-                      child: const Text('Add Activity'),
-                    ),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 40),
+                      ElevatedButton(
+                        onPressed: _submitForm,
+                        child: const Text('Add Activity'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-           ),
           );
         },
       ),

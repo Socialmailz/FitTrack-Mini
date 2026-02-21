@@ -1,11 +1,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:myapp/data/activity_data.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:myapp/models/activity.dart';
 import 'package:collection/collection.dart';
-import 'package:intl/intl.dart';
-import 'package:myapp/widgets/ad_banner.dart';
+import 'package:myapp/services/database_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -23,35 +22,35 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isWide = constraints.maxWidth > 600;
-          return Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(textTheme),
-                      const SizedBox(height: 24),
-                      _buildSummaryCards(isWide),
-                      const SizedBox(height: 24),
-                      _buildChartCard(textTheme, isWide: isWide),
-                      const SizedBox(height: 24),
-                      _buildActivityBreakdown(textTheme, isWide: isWide),
-                    ],
-                  ),
+      body: ValueListenableBuilder<Box<Activity>>(
+        valueListenable: DatabaseService.getActivitiesBox().listenable(),
+        builder: (context, box, _) {
+          final activities = box.values.toList().cast<Activity>();
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              bool isWide = constraints.maxWidth > 600;
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(textTheme),
+                    const SizedBox(height: 8),
+                    _buildSummaryCards(isWide, activities),
+                    const SizedBox(height: 24),
+                    _buildChartCard(textTheme, isWide: isWide, activities: activities),
+                    const SizedBox(height: 24),
+                    _buildActivityBreakdown(textTheme, isWide: isWide, activities: activities),
+                  ],
                 ),
-              ),
-              const AdBanner(), // Keep the ad banner at the bottom
-            ],
+              );
+            },
           );
         },
       ),
     );
   }
+
   Widget _buildHeader(TextTheme textTheme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -76,7 +75,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -109,8 +108,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildSummaryCards(bool isWide) {
-    final summaryData = _getSummaryData();
+  Widget _buildSummaryCards(bool isWide, List<Activity> activities) {
+    final summaryData = _getSummaryData(activities);
     return GridView.count(
       crossAxisCount: isWide ? 4 : 2,
       shrinkWrap: true,
@@ -142,7 +141,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-              backgroundColor: color.withOpacity(0.15),
+              backgroundColor: color.withAlpha(38),
               radius: 22,
               child: Icon(icon, color: color, size: 24),
             ),
@@ -168,7 +167,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       ),
     );
   }
-  Widget _buildChartCard(TextTheme textTheme, {required bool isWide}) {
+
+  Widget _buildChartCard(TextTheme textTheme, {required bool isWide, required List<Activity> activities}) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -182,15 +182,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             SizedBox(
-                height: isWide ? 300 : 200, child: LineChart(_getLineChartData())),
+                height: isWide ? 300 : 200, child: LineChart(_getLineChartData(activities))),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActivityBreakdown(TextTheme textTheme, {required bool isWide}) {
-    final breakdownData = _getActivityBreakdown();
+  Widget _buildActivityBreakdown(TextTheme textTheme, {required bool isWide, required List<Activity> activities}) {
+    final breakdownData = _getActivityBreakdown(activities);
     if (breakdownData.isEmpty) {
       return Card(
         elevation: 0,
@@ -276,9 +276,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       ],
     );
   }
-  List<Activity> _getFilteredActivities() {
+
+  List<Activity> _getFilteredActivities(List<Activity> allActivities) {
     final now = DateTime.now();
-    return ActivityData.activities.where((act) {
+    return allActivities.where((act) {
       final difference = now.difference(act.timestamp).inDays;
       if (_selectedPeriod == 'Weekly') {
         return difference <= 7;
@@ -291,8 +292,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }).toList();
   }
 
-  Map<String, double> _getSummaryData() {
-    final filteredActivities = _getFilteredActivities();
+  Map<String, double> _getSummaryData(List<Activity> allActivities) {
+    final filteredActivities = _getFilteredActivities(allActivities);
     if (filteredActivities.isEmpty) {
       return {
         'totalActivities': 0,
@@ -304,22 +305,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     double totalDistance = filteredActivities.map((a) => a.distance).sum;
     double totalDuration =
-        filteredActivities.map((a) => a.duration.inSeconds).sum.toDouble();
-    // Simple calorie estimation: 60 kcal per km
-    double totalCalories = totalDistance * 60;
+        filteredActivities.map((a) => a.duration).sum.toDouble();
+    double totalCalories = filteredActivities.map((a) => a.calories).sum.toDouble();
 
     return {
       'totalActivities': filteredActivities.length.toDouble(),
       'totalDistance': totalDistance,
-      'totalDuration': totalDuration, // in seconds
+      'totalDuration': totalDuration, // in minutes
       'avgCalories': filteredActivities.isEmpty
           ? 0
           : totalCalories / filteredActivities.length,
     };
   }
 
-  Map<String, double> _getActivityBreakdown() {
-    final filteredActivities = _getFilteredActivities();
+  Map<String, double> _getActivityBreakdown(List<Activity> allActivities) {
+    final filteredActivities = _getFilteredActivities(allActivities);
     final data = <String, double>{};
     for (var activity in filteredActivities) {
       data.update(activity.type, (value) => value + activity.distance,
@@ -328,8 +328,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return data;
   }
 
-  LineChartData _getLineChartData() {
-    final filteredActivities = _getFilteredActivities();
+  LineChartData _getLineChartData(List<Activity> allActivities) {
+    final filteredActivities = _getFilteredActivities(allActivities);
     final colorScheme = Theme.of(context).colorScheme;
 
     Map<int, double> dataMap = {};
@@ -359,7 +359,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         drawVerticalLine: false,
         getDrawingHorizontalLine: (value) {
           return FlLine(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha(25),
             strokeWidth: 1,
           );
         },
@@ -375,13 +375,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         LineChartBarData(
           spots: spots,
           isCurved: true,
-          color: colorScheme.primary,
+          gradient: LinearGradient(
+            colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.3)],
+          ),
           barWidth: 4,
           isStrokeCapRound: true,
           dotData: const FlDotData(show: false),
           belowBarData: BarAreaData(
             show: true,
-            color: colorScheme.primary.withOpacity(0.2),
+            gradient: LinearGradient(
+              colors: [colorScheme.primary.withOpacity(0.3), colorScheme.primary.withOpacity(0.0)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
         ),
       ],
@@ -404,19 +410,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           titleStyle: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
-              shadows: [Shadow(color: Colors.black26, blurRadius: 4)]),
+              color: Colors.white),
         );
       }).toList(),
     );
   }
 
-  String _formatDuration(double totalSeconds) {
-    final duration = Duration(seconds: totalSeconds.toInt());
+  String _formatDuration(double totalMinutes) {
+    final duration = Duration(minutes: totalMinutes.toInt());
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     if (hours > 0) {
-      return '$hours h ${minutes} m';
+      return '$hours h $minutes m';
     } else {
       return '$minutes m';
     }

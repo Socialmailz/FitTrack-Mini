@@ -1,8 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/main.dart';
-import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.navigationShell});
@@ -18,49 +16,60 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (navigationShell.currentIndex != 0) {
+          navigationShell.goBranch(0);
+        }
+      },
+      child: Scaffold(
+        body: navigationShell,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => context.go('/add'),
+          shape: const CircleBorder(),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          child: const Icon(Icons.add, color: Colors.white, size: 32),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+          shape: const CircularNotchedRectangle(),
+          notchMargin: 8.0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(context, Icons.dashboard_rounded, 'Dashboard', 0),
+              _buildNavItem(context, Icons.history_rounded, 'History', 1),
+              const SizedBox(width: 48), // Spacer for FAB
+              _buildNavItem(context, Icons.analytics_outlined, 'Analytics', 2),
+              _buildNavItem(context, Icons.settings_rounded, 'Settings', 3),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('FitTrack Mini'),
-        actions: [
-          IconButton(
-            icon: Icon(themeProvider.themeMode == ThemeMode.dark
-                ? Icons.light_mode
-                : Icons.dark_mode),
-            onPressed: () => themeProvider.toggleTheme(),
-            tooltip: 'Toggle Theme',
-          ),
-        ],
+  Widget _buildNavItem(BuildContext context, IconData icon, String label, int index) {
+    final isSelected = navigationShell.currentIndex == index;
+    final color = isSelected
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).unselectedWidgetColor;
+
+    return InkWell(
+      onTap: () => _onTap(context, index),
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(color: color, fontSize: 12)),
+          ],
+        ),
       ),
-      body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Analytics',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: navigationShell.currentIndex,
-        onTap: (index) => _onTap(context, index),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/add'),
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }

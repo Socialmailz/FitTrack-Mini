@@ -1,48 +1,56 @@
 
-# Project Blueprint
+# FitTrack Mini - Blueprint
 
 ## Overview
 
-This document outlines the plan for building a complete and functional Flutter application.
+FitTrack Mini is a modern, offline-first fitness tracking application for Flutter. It is designed to be a lightweight, intuitive, and visually appealing app that helps users monitor their physical activities without needing an internet connection. All data is stored locally on the device, ensuring user privacy and instant access.
 
-## Current State
+## Key Features
 
-The application currently has a dashboard screen, but it's not responsive and the buttons are not functional. The other screens are empty. The application's logo has been updated across all relevant files.
+*   **Offline-First:** Fully functional without an internet connection.
+*   **Local Data Storage:** Uses the high-performance Hive database to store all user data securely on the device.
+*   **Intuitive UI:** A clean, modern, and easy-to-navigate user interface built with Material Design 3 principles.
+*   **Core Metrics:** Tracks key fitness metrics, including:
+    *   Steps
+    *   Calories Burned
+    *   Active Time
+    *   Distance
+*   **Activity Logging:** Allows users to manually log various activities like walking, running, cycling, and more.
+*   **Dashboard:** A central hub displaying daily progress, key stats, and recent activities.
+*   **History:** A detailed log of all past activities, allowing users to review their performance over time.
+*   **Analytics:** Visual charts and summaries providing insights into weekly, monthly, and yearly performance.
+*   **Data Management:** Users can:
+    *   Export their data to a JSON backup file.
+    *   Import data from a backup file.
+    *   Delete all their data.
 
-## Plan
+## Design and Style
 
-### 1. Theming
+*   **Theme:** A dual-theme system (light and dark) based on a modern color palette with Teal as the primary accent.
+*   **Typography:** Uses the `poppins` font from Google Fonts for a clean and readable text style.
+*   **Iconography:** Utilizes Material Design icons for clear and consistent navigation.
+*   **Layout:** Employs cards, responsive grids, and clean spacing to create a visually balanced and intuitive layout.
 
-- [ ] Implement a theme provider to handle light and dark modes.
-- [ ] Use `ColorScheme.fromSeed` to generate a color palette.
-- [ ] Use `google_fonts` for typography.
+## Architecture
 
-### 2. Responsiveness
+*   **State Management:** Uses `provider` for managing app-wide state, such as the theme.
+*   **Routing:** Leverages the `go_router` package for a declarative and robust navigation system.
+*   **Database:** Implements `Hive` for all local data storage, managed through a centralized `DatabaseService`.
+*   **Folder Structure:** Follows a clean, feature-first structure:
+    *   `lib/models/`: Contains all data models (e.g., `Activity`).
+    *   `lib/services/`: Includes services like `DatabaseService`.
+    *   `lib/screens/`: Holds all the main screens of the app.
+    *   `lib/widgets/`: Contains reusable UI components.
 
-- [ ] Make the UI responsive on all screen sizes.
-- [ ] Use `LayoutBuilder` and `MediaQuery` to create adaptive layouts.
+## Implemented Changes & Fixes (Current Session)
 
-### 3. Screen Content and Navigation
-
-- [ ] Add content and functionality to all the empty screens.
-- [ ] Use `go_router` for navigation.
-
-### 4. Backend Integration
-
-- [ ] Connect the app to Firebase for backend services.
-- [ ] Use Firestore to store and retrieve data.
-- [ ] Use Firebase Authentication for user management.
-
-### 5. Functionality
-
-- [ ] Make all the buttons and interactive elements functional.
-- [ ] Add error handling and logging.
-
-### 6. Ads Integration
-
-- [ ] Integrate Google Mobile Ads SDK.
-- [ ] Display banner, interstitial, and rewarded ads.
-
-### 7. Branding and Visuals
-
-- [x] Replaced all old logos with the new logo.
+*   **Offline-First Conversion:** Successfully migrated the app to a fully offline architecture using the Hive database.
+*   **UI/UX Enhancements:**
+    *   **Dashboard:** Redesigned the dashboard to be more intuitive and visually appealing.
+    *   **Add Activity Screen:** Simplified the activity logging process by removing the manual distance input and calculating it based on activity type and duration.
+    *   **Analytics Screen:** Fixed bottom overflow issues by making the layout scrollable and fixed the data source to use live data from the database.
+*   **Navigation:**
+    *   **Back Button:** Fixed the back navigation logic. The app now navigates to the "Dashboard" tab from other tabs instead of closing, providing a more intuitive user experience.
+*   **Code Cleanup:**
+    *   **Removed Unnecessary Files:** Deleted all backend-related files, old UI screens (`splash_screen.dart`), and Firebase configurations (`.idx/mcp.json`, `GEMINI.md`).
+    *   **Removed Firebase Dependencies:** Cleaned up `pubspec.yaml` and other files to remove all Firebase-related code and dependencies.

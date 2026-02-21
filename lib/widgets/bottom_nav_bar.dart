@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:myapp/screens/dashboard_screen.dart';
 import 'package:myapp/screens/history_screen.dart';
 import 'package:myapp/screens/analytics_screen.dart';
-import 'package:myapp/screens/profile_screen.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -18,7 +17,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
     const DashboardScreen(),
     const HistoryScreen(),
     const AnalyticsScreen(),
-    const ProfileScreen(),
   ];
 
   void _onTabTapped(int index) {
@@ -52,10 +50,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics),
             label: 'Analytics',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
           ),
         ],
       ),
