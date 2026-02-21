@@ -7,7 +7,7 @@ This document outlines the plan for building a complete and functional Flutter a
 
 ## Current State
 
-The application currently has a dashboard screen, but it's not responsive and the buttons are not functional. The other screens are empty.
+The application currently has a dashboard screen, but it's not responsive and the buttons are not functional. The other screens are empty. The application's logo has been updated across all relevant files.
 
 ## Plan
 
@@ -42,3 +42,7 @@ The application currently has a dashboard screen, but it's not responsive and th
 
 - [ ] Integrate Google Mobile Ads SDK.
 - [ ] Display banner, interstitial, and rewarded ads.
+
+### 7. Branding and Visuals
+
+- [x] Replaced all old logos with the new logo.
