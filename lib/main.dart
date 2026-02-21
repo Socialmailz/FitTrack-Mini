@@ -34,7 +34,6 @@ class ThemeProvider with ChangeNotifier {
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final _router = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -46,11 +45,12 @@ final _router = GoRouter(
       },
       branches: [
         StatefulShellBranch(
-          navigatorKey: _shellNavigatorKey,
           routes: [
             GoRoute(
               path: '/dashboard',
-              builder: (context, state) => const DashboardScreen(),
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: DashboardScreen(),
+              ),
             ),
           ],
         ),
@@ -58,7 +58,9 @@ final _router = GoRouter(
           routes: [
             GoRoute(
               path: '/history',
-              builder: (context, state) => const HistoryScreen(),
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: HistoryScreen(),
+              ),
             ),
           ],
         ),
@@ -66,7 +68,9 @@ final _router = GoRouter(
           routes: [
             GoRoute(
               path: '/analytics',
-              builder: (context, state) => const AnalyticsScreen(),
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: AnalyticsScreen(),
+              ),
             ),
           ],
         ),
@@ -74,7 +78,9 @@ final _router = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: ProfileScreen(),
+              ),
             ),
           ],
         ),

@@ -31,7 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     5: 11234,
     6: 7865
   };
-  final double waterGoal = 2000;
+  double waterGoal = 2000;
   double currentWater = 750;
   final int weeklyStreak = 3;
 
@@ -76,6 +76,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  void _showWaterGoalDialog() {
+    final TextEditingController controller = TextEditingController(text: waterGoal.toString());
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Set Water Goal'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Goal (ml)'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  waterGoal = double.tryParse(controller.text) ?? waterGoal;
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Set'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -95,20 +128,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 _buildWelcomeSection(textTheme, colorScheme),
                 const SizedBox(height: 24),
-                _buildAutoStepCounterCard(textTheme, colorScheme),
-                const SizedBox(height: 24),
                 _buildDailySummaryCard(textTheme, colorScheme),
                 const SizedBox(height: 24),
                 _buildQuickStartButtons(
                     context, textTheme, colorScheme, crossAxisCount),
+                const SizedBox(height: 24),
+                const AdBanner(),
                 const SizedBox(height: 24),
                 _buildWeeklyProgressCard(context, textTheme, colorScheme),
                 const SizedBox(height: 24),
                 _buildWaterIntakeCard(textTheme, colorScheme),
                 const SizedBox(height: 24),
                 _buildAchievementsCard(textTheme, colorScheme),
-                const SizedBox(height: 24),
-                const AdBanner(),
                 const SizedBox(height: 20),
               ],
             ),
@@ -145,33 +176,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAutoStepCounterCard(
-      TextTheme textTheme, ColorScheme colorScheme) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Auto Step Tracking',
-                style: textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold)),
-            Row(
-              children: [
-                const Icon(Icons.directions_walk, color: Colors.green),
-                const SizedBox(width: 8),
-                Text(
-                  'ON',
-                  style: textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                )
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildDailySummaryCard(TextTheme textTheme, ColorScheme colorScheme) {
     final double stepProgress = (_currentSteps / stepGoal).clamp(0.0, 1.0);
@@ -181,7 +185,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           children: [
             CircularPercentIndicator(
-              radius: 80.0,
+              radius: 90.0,
               lineWidth: 12.0,
               percent: stepProgress,
               circularStrokeCap: CircularStrokeCap.round,
@@ -205,11 +209,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.primary)),
-                      Text(' steps',
-                          style: textTheme.bodyMedium
-                              ?.copyWith(color: colorScheme.primary)),
                     ],
                   ),
+                  Text('steps',
+                          style: textTheme.bodyMedium
+                              ?.copyWith(color: colorScheme.primary)),
+                  const SizedBox(height: 4),
                   Text('Goal: ${NumberFormat.decimalPattern().format(stepGoal)}',
                       style: textTheme.titleSmall
                           ?.copyWith(color: Colors.grey[600])),
@@ -439,6 +444,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onPressed: _addWater,
                     icon: const Icon(Icons.add),
                     label: const Text("Add 250ml")),
+                TextButton.icon(onPressed: _showWaterGoalDialog, icon: const Icon(Icons.edit), label: const Text('Set Goal')),
                 TextButton(onPressed: _resetWater, child: const Text('Reset')),
               ],
             )

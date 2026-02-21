@@ -26,41 +26,43 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           bool isWide = constraints.maxWidth > 600;
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.all(20.0),
-                      children: [
-                        _buildHeader(textTheme),
-                        const SizedBox(height: 20),
-                        _buildSummaryCards(isWide),
-                        const SizedBox(height: 30),
-                        _buildChartCard(textTheme, isWide: isWide),
-                        const SizedBox(height: 30),
-                        _buildActivityBreakdown(textTheme),
-                      ],
-                    ),
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(textTheme),
+                      const SizedBox(height: 24),
+                      _buildSummaryCards(isWide),
+                      const SizedBox(height: 24),
+                      _buildChartCard(textTheme, isWide: isWide),
+                      const SizedBox(height: 24),
+                      _buildActivityBreakdown(textTheme, isWide: isWide),
+                    ],
                   ),
-                  const AdBanner(),
-                ],
+                ),
               ),
-            ),
+              const AdBanner(), // Keep the ad banner at the bottom
+            ],
           );
         },
       ),
     );
   }
-
   Widget _buildHeader(TextTheme textTheme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('Performance Analytics', style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          'Performance Analytics',
+          style: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
         _buildPeriodSelector(),
       ],
     );
@@ -68,20 +70,34 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildPeriodSelector() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.grey.shade300, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: DropdownButton<String>(
         value: _selectedPeriod,
         underline: Container(),
-        icon: const Icon(Icons.arrow_drop_down, size: 20),
+        icon: Icon(Icons.keyboard_arrow_down_rounded,
+            color: Theme.of(context).colorScheme.primary),
         items: _periods.map((String value) {
           return DropdownMenuItem<String>(
             value: value,
-            child: Text(value, style: const TextStyle(fontSize: 14)),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
           );
         }).toList(),
         onChanged: (newValue) {
@@ -101,94 +117,165 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: isWide ? 1.5 : 1.2,
+      childAspectRatio: isWide ? 1.6 : 1.3,
       children: [
-        _summaryCard(Icons.directions_run, 'Total Activities', summaryData['totalActivities']!.toStringAsFixed(0), Colors.orange),
-        _summaryCard(Icons.route, 'Total Distance', '${summaryData['totalDistance']!.toStringAsFixed(1)} km', Colors.blue),
-        _summaryCard(Icons.timer, 'Total Duration', _formatDuration(summaryData['totalDuration']!), Colors.green),
-        _summaryCard(Icons.whatshot, 'Avg. Calories', '${summaryData['avgCalories']!.toStringAsFixed(0)} kcal', Colors.red),
+        _summaryCard(Icons.local_fire_department_rounded, 'Total Activities',
+            summaryData['totalActivities']!.toStringAsFixed(0), Colors.orange),
+        _summaryCard(Icons.timeline_rounded, 'Total Distance',
+            '${summaryData['totalDistance']!.toStringAsFixed(1)} km', Colors.blue),
+        _summaryCard(Icons.timer_rounded, 'Total Duration',
+            _formatDuration(summaryData['totalDuration']!), Colors.green),
+        _summaryCard(Icons.whatshot_rounded, 'Avg. Calories',
+            '${summaryData['avgCalories']!.toStringAsFixed(0)} kcal', Colors.red),
       ],
     );
   }
 
   Widget _summaryCard(IconData icon, String title, String value, Color color) {
-    final textTheme = Theme.of(context).textTheme;
     return Card(
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(backgroundColor: color.withOpacity(0.15), child: Icon(icon, color: color)),
+            CircleAvatar(
+              backgroundColor: color.withOpacity(0.15),
+              radius: 22,
+              child: Icon(icon, color: color, size: 24),
+            ),
             const SizedBox(height: 12),
-            Text(title, style: textTheme.bodyMedium?.copyWith(color: Colors.grey[600])),
-            const SizedBox(height: 4),
-            Text(value, style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: Colors.grey[600]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+            ),
           ],
         ),
       ),
     );
   }
-
   Widget _buildChartCard(TextTheme textTheme, {required bool isWide}) {
     return Card(
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Distance Over Time', style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            Text('Distance Over Time',
+                style: textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
-            SizedBox(height: isWide ? 300 : 200, child: LineChart(_getLineChartData())),
+            SizedBox(
+                height: isWide ? 300 : 200, child: LineChart(_getLineChartData())),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActivityBreakdown(TextTheme textTheme) {
+  Widget _buildActivityBreakdown(TextTheme textTheme, {required bool isWide}) {
     final breakdownData = _getActivityBreakdown();
-    if (breakdownData.isEmpty) return const SizedBox.shrink();
+    if (breakdownData.isEmpty) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: const SizedBox(
+          height: 200,
+          child: Center(
+              child: Text('No activity data available for this period.')),
+        ),
+      );
+    }
 
-    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple, Colors.teal];
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.red,
+      Colors.purple,
+      Colors.teal
+    ];
 
     return Card(
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: isWide
+            ? Row(
                 children: [
-                  Text('Activity Breakdown', style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  Expanded(
+                      flex: 2,
+                      child: _buildBreakdownDetails(textTheme, breakdownData, colors)),
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                        height: 180,
+                        child: PieChart(_getPieChartData(breakdownData, colors))),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  _buildBreakdownDetails(textTheme, breakdownData, colors),
                   const SizedBox(height: 20),
-                  ...breakdownData.entries.mapIndexed((index, entry) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Row(children: [Container(width: 12, height: 12, color: colors[index % colors.length]), const SizedBox(width: 8), Text('${entry.key}: ${entry.value.toStringAsFixed(1)} km')]),
-                    );
-                  })
+                  SizedBox(
+                      height: 150,
+                      child: PieChart(_getPieChartData(breakdownData, colors))),
                 ],
               ),
-            ),
-            Expanded(
-              flex: 1,
-              child: SizedBox(height: 150, child: PieChart(_getPieChartData(breakdownData, colors))),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  // --- Data Processing Methods ---
-
+  Widget _buildBreakdownDetails(TextTheme textTheme,
+      Map<String, double> breakdownData, List<Color> colors) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Activity Breakdown',
+            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 20),
+        ...breakdownData.entries.mapIndexed((index, entry) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: Row(
+              children: [
+                Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: colors[index % colors.length],
+                      shape: BoxShape.circle,
+                    )),
+                const SizedBox(width: 12),
+                Text(
+                  '${entry.key}: ${entry.value.toStringAsFixed(1)} km',
+                  style: textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          );
+        })
+      ],
+    );
+  }
   List<Activity> _getFilteredActivities() {
     final now = DateTime.now();
     return ActivityData.activities.where((act) {
@@ -207,11 +294,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Map<String, double> _getSummaryData() {
     final filteredActivities = _getFilteredActivities();
     if (filteredActivities.isEmpty) {
-      return {'totalActivities': 0, 'totalDistance': 0, 'totalDuration': 0, 'avgCalories': 0};
+      return {
+        'totalActivities': 0,
+        'totalDistance': 0,
+        'totalDuration': 0,
+        'avgCalories': 0
+      };
     }
 
     double totalDistance = filteredActivities.map((a) => a.distance).sum;
-    double totalDuration = filteredActivities.map((a) => a.duration.inSeconds).sum.toDouble();
+    double totalDuration =
+        filteredActivities.map((a) => a.duration.inSeconds).sum.toDouble();
     // Simple calorie estimation: 60 kcal per km
     double totalCalories = totalDistance * 60;
 
@@ -219,7 +312,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'totalActivities': filteredActivities.length.toDouble(),
       'totalDistance': totalDistance,
       'totalDuration': totalDuration, // in seconds
-      'avgCalories': totalCalories / filteredActivities.length,
+      'avgCalories': filteredActivities.isEmpty
+          ? 0
+          : totalCalories / filteredActivities.length,
     };
   }
 
@@ -227,7 +322,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final filteredActivities = _getFilteredActivities();
     final data = <String, double>{};
     for (var activity in filteredActivities) {
-      data.update(activity.type, (value) => value + activity.distance, ifAbsent: () => activity.distance);
+      data.update(activity.type, (value) => value + activity.distance,
+          ifAbsent: () => activity.distance);
     }
     return data;
   }
@@ -235,29 +331,45 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   LineChartData _getLineChartData() {
     final filteredActivities = _getFilteredActivities();
     final colorScheme = Theme.of(context).colorScheme;
-    final spots = <FlSpot>[];
 
-    final groupedData = groupBy(filteredActivities, (Activity act) {
-      if (_selectedPeriod == 'Weekly' || _selectedPeriod == 'Monthly') {
-        return DateFormat.E().format(act.timestamp); // Group by day of the week
+    Map<int, double> dataMap = {};
+
+    for (var act in filteredActivities) {
+      int key;
+      if (_selectedPeriod == 'Weekly') {
+        key = act.timestamp.weekday; // 1 (Mon) to 7 (Sun)
+      } else if (_selectedPeriod == 'Monthly') {
+        key = act.timestamp.day;
       } else {
-        return DateFormat.MMM().format(act.timestamp); // Group by month
+        key = act.timestamp.month;
       }
-    });
-    
-    // This part is a simplification. A real implementation would need to handle x-axis labels and data points more robustly.
-    // For this example, we just create some spots based on the number of groups.
-    double i = 0;
-    for (var group in groupedData.values) {
-      double totalDistance = group.map((a) => a.distance).sum;
-      spots.add(FlSpot(i, totalDistance));
-      i++;
+      dataMap.update(key, (value) => value + act.distance,
+          ifAbsent: () => act.distance);
     }
+
+    List<FlSpot> spots =
+        dataMap.entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
+   
     if (spots.isEmpty) spots.add(FlSpot.zero);
 
+
     return LineChartData(
-      gridData: const FlGridData(show: false),
-      titlesData: const FlTitlesData(show: false),
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: false,
+        getDrawingHorizontalLine: (value) {
+          return FlLine(
+            color: Colors.grey.withOpacity(0.1),
+            strokeWidth: 1,
+          );
+        },
+      ),
+      titlesData: const FlTitlesData(
+        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      ),
       borderData: FlBorderData(show: false),
       lineBarsData: [
         LineChartBarData(
@@ -267,24 +379,33 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           barWidth: 4,
           isStrokeCapRound: true,
           dotData: const FlDotData(show: false),
-          belowBarData: BarAreaData(show: true, color: colorScheme.primary.withOpacity(0.2)),
+          belowBarData: BarAreaData(
+            show: true,
+            color: colorScheme.primary.withOpacity(0.2),
+          ),
         ),
       ],
     );
   }
 
-
-  PieChartData _getPieChartData(Map<String, double> breakdownData, List<Color> colors) {
+  PieChartData _getPieChartData(
+      Map<String, double> breakdownData, List<Color> colors) {
     return PieChartData(
       sectionsSpace: 4,
       centerSpaceRadius: 40,
       sections: breakdownData.entries.mapIndexed((index, entry) {
+        final double percentage =
+            (entry.value / breakdownData.values.sum * 100);
         return PieChartSectionData(
           color: colors[index % colors.length],
           value: entry.value,
-          title: '${(entry.value / breakdownData.values.sum * 100).toStringAsFixed(0)}%',
-          radius: 50,
-          titleStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+          title: '${percentage.toStringAsFixed(0)}%',
+          radius: 60,
+          titleStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              shadows: [Shadow(color: Colors.black26, blurRadius: 4)]),
         );
       }).toList(),
     );
