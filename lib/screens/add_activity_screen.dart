@@ -29,7 +29,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
           child: Column(
             children: [
               DropdownButtonFormField<String>(
-                value: _activityType,
+                initialValue: _activityType,
                 hint: const Text('Activity Type'),
                 onChanged: (String? newValue) {
                   setState(() {

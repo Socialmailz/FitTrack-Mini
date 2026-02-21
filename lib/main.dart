@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
         showSelectedLabels: true,
         showUnselectedLabels: false,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -99,7 +99,7 @@ class MyApp extends StatelessWidget {
          showSelectedLabels: true,
         showUnselectedLabels: false,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

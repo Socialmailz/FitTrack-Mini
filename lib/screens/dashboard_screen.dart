@@ -92,10 +92,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         IconButton(icon: const Icon(Icons.settings_outlined, size: 28), onPressed: () {}),
         const SizedBox(width: 12),
       ],
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       elevation: 0,
       scrolledUnderElevation: 0,
-      foregroundColor: colorScheme.onBackground,
+      foregroundColor: colorScheme.onSurface,
     );
   }
 
@@ -226,11 +226,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return BarChartData(
       alignment: BarChartAlignment.spaceAround,
       maxY: (weeklySteps.values.reduce((a,b) => a > b ? a : b) * 1.2).toDouble(),
-      barTouchData: BarTouchData(touchTooltipData: BarTouchTooltipData(tooltipBgColor: Colors.blueGrey, getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem((rod.toY - 1).toStringAsFixed(0), const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))),
+      barTouchData: BarTouchData(touchTooltipData: BarTouchTooltipData(getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem((rod.toY - 1).toStringAsFixed(0), const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))),
       titlesData: FlTitlesData(show: true, topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)), rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)), leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)), bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (double value, TitleMeta meta) {
         const style = TextStyle(fontWeight: FontWeight.bold, fontSize: 14);
         String text; switch (value.toInt()) { case 0: text = 'M'; break; case 1: text = 'T'; break; case 2: text = 'W'; break; case 3: text = 'T'; break; case 4: text = 'F'; break; case 5: text = 'S'; break; case 6: text = 'S'; break; default: text = ''; break; }
-        return SideTitleWidget(axisSide: meta.axisSide, child: Text(text, style: style));
+        return SideTitleWidget(child: Text(text, style: style), axisSide: meta.axisSide);
       }))),
       borderData: FlBorderData(show: false),
       gridData: const FlGridData(show: false),
