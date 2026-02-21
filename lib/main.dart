@@ -1,119 +1,127 @@
+
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:myapp/screens/home_screen.dart';
 
 void main() {
-  runApp(const FitTrackMiniApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
+  runApp(const MyApp());
 }
 
-class FitTrackMiniApp extends StatelessWidget {
-  const FitTrackMiniApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FitTrack Mini',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+    // --- Light Theme --- 
+    final lightTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF0EA5A4), // Primary: Teal
+        brightness: Brightness.light,
+        primary: const Color(0xFF0EA5A4),
+        secondary: const Color(0xFF84CC16), // Accent: Lime
+        background: const Color(0xFFF1F5F9), // Light Background: Slate
+        surface: Colors.white,
+        onPrimary: Colors.white,
+        onSecondary: Colors.black,
+        onBackground: const Color(0xFF0F172A), // Dark Text: Slate
+        onSurface: const Color(0xFF0F172A),
       ),
-      debugShowCheckedModeBanner: false,
-      home: const DashboardScreen(),
-    );
-  }
-}
-
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
-
-  @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('FitTrack Mini'),
+      textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme).apply(
+        bodyColor: const Color(0xFF0F172A),
+        displayColor: const Color(0xFF0F172A),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Good Morning 👋',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: 200,
-              height: 200,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  const CircularProgressIndicator(
-                    value: 3254 / 8000,
-                    strokeWidth: 10,
-                    backgroundColor: Colors.black12,
-                  ),
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Text(
-                          '3254',
-                          style: TextStyle(
-                              fontSize: 40, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Goal 8000 steps',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {},
-              child: const Text('Add Activity'),
-            ),
-          ],
+      scaffoldBackgroundColor: const Color(0xFFF1F5F9),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF0F172A), // Dark Slate for App Bar
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: Color(0xFF0EA5A4), // Teal for active tab
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: true,
+        showUnselectedLabels: false,
+      ),
+      cardTheme: CardTheme(
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: Colors.white,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0EA5A4), // Teal
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Analytics',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.green,
-        unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
+    );
+
+    // --- Dark Theme ---
+    final darkTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF0EA5A4), // Primary: Teal
+        brightness: Brightness.dark,
+        primary: const Color(0xFF0EA5A4),
+        secondary: const Color(0xFF84CC16), // Accent: Lime
+        background: const Color(0xFF0F172A), // Dark Background
+        surface: const Color(0xFF1E293B), // Slightly lighter surface
+        onPrimary: Colors.black,
+        onSecondary: Colors.white,
+        onBackground: const Color(0xFFF1F5F9), // Light text
+        onSurface: const Color(0xFFF1F5F9),
       ),
+      textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme).apply(
+        bodyColor: const Color(0xFFF1F5F9),
+        displayColor: const Color(0xFFF1F5F9),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0F172A),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1E293B), // Surface color
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Color(0xFF1E293B),
+        selectedItemColor: Color(0xFF0EA5A4), // Teal
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+         showSelectedLabels: true,
+        showUnselectedLabels: false,
+      ),
+      cardTheme: CardTheme(
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: const Color(0xFF1E293B),
+      ),
+       elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0EA5A4), // Teal
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        ),
+      ),
+    );
+
+    return MaterialApp(
+      title: 'FitTrack Mini',
+      theme: lightTheme, // Set default theme
+      darkTheme: darkTheme, // Set dark theme
+      themeMode: ThemeMode.system, // Automatically adapt to system settings
+      debugShowCheckedModeBanner: false,
+      home: const HomeScreen(),
     );
   }
 }
