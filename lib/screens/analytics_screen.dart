@@ -5,6 +5,7 @@ import 'package:myapp/data/activity_data.dart';
 import 'package:myapp/models/activity.dart';
 import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
+import 'package:myapp/widgets/ad_banner.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -28,16 +29,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1200),
-              child: ListView(
-                padding: const EdgeInsets.all(20.0),
+              child: Column(
                 children: [
-                  _buildHeader(textTheme),
-                  const SizedBox(height: 20),
-                  _buildSummaryCards(isWide),
-                  const SizedBox(height: 30),
-                  _buildChartCard(textTheme, isWide: isWide),
-                  const SizedBox(height: 30),
-                  _buildActivityBreakdown(textTheme),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.all(20.0),
+                      children: [
+                        _buildHeader(textTheme),
+                        const SizedBox(height: 20),
+                        _buildSummaryCards(isWide),
+                        const SizedBox(height: 30),
+                        _buildChartCard(textTheme, isWide: isWide),
+                        const SizedBox(height: 30),
+                        _buildActivityBreakdown(textTheme),
+                      ],
+                    ),
+                  ),
+                  const AdBanner(),
                 ],
               ),
             ),

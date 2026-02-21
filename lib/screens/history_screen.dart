@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:myapp/widgets/ad_native.dart'; // Import the native ad widget
+import 'package:myapp/widgets/ad_banner.dart';
 
 // Mock data model for a past activity
 class Activity {
@@ -21,8 +21,8 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   // Mock list of past activities
-  final List<dynamic> _activityItems = [];
-  List<dynamic> _filteredActivityItems = [];
+  final List<Activity> _activityItems = [];
+  List<Activity> _filteredActivityItems = [];
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -30,7 +30,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     super.initState();
     // Generate a mixed list of activities and ads
     _activityItems.addAll(generateMockActivities());
-    insertAds();
     _filteredActivityItems = List.from(_activityItems);
     _searchController.addListener(_filterActivities);
   }
@@ -48,24 +47,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     ];
   }
 
-  void insertAds() {
-    // Insert an ad at a specific position in the list
-    if (_activityItems.length > 3) {
-      _activityItems.insert(3, const AdNative());
-    }
-     if (_activityItems.length > 7) {
-      _activityItems.insert(7, const AdNative());
-    }
-  }
-
   void _filterActivities() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       _filteredActivityItems = _activityItems.where((item) {
-        if (item is Activity) {
-          return item.title.toLowerCase().contains(query) || item.subtitle.toLowerCase().contains(query);
-        }
-        return true; // Always show ads
+        return item.title.toLowerCase().contains(query) || item.subtitle.toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -96,35 +82,34 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: _filteredActivityItems.length,
-        itemBuilder: (context, index) {
-          final item = _filteredActivityItems[index];
-          if (item is Activity) {
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
-                leading: Icon(item.icon, color: Theme.of(context).colorScheme.primary, size: 40),
-                title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(item.subtitle),
-                trailing: Text(item.trailing, style: TextStyle(color: Colors.grey[600])),
-              ),
-            );
-          } else if (item is AdNative) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: item,
-            ); // Render the native ad widget directly
-          }
-          return const SizedBox.shrink();
-        },
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredActivityItems.length,
+              itemBuilder: (context, index) {
+                final item = _filteredActivityItems[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    leading: Icon(item.icon, color: Theme.of(context).colorScheme.primary, size: 40),
+                    title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(item.subtitle),
+                    trailing: Text(item.trailing, style: TextStyle(color: Colors.grey[600])),
+                  ),
+                );
+              },
+            ),
+          ),
+          const AdBanner(),
+        ],
       ),
     );
   }
 }
 
 class ActivitySearchDelegate extends SearchDelegate {
-  final List<dynamic> _activityItems;
+  final List<Activity> _activityItems;
 
   ActivitySearchDelegate(this._activityItems);
 
@@ -153,16 +138,13 @@ class ActivitySearchDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     final results = _activityItems.where((item) {
-      if (item is Activity) {
-        return item.title.toLowerCase().contains(query.toLowerCase()) || item.subtitle.toLowerCase().contains(query.toLowerCase());
-      }
-      return false;
+      return item.title.toLowerCase().contains(query.toLowerCase()) || item.subtitle.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
     return ListView.builder(
       itemCount: results.length,
       itemBuilder: (context, index) {
-        final item = results[index] as Activity;
+        final item = results[index];
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
@@ -179,16 +161,13 @@ class ActivitySearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     final suggestions = _activityItems.where((item) {
-      if (item is Activity) {
-        return item.title.toLowerCase().contains(query.toLowerCase());
-      }
-      return false;
+      return item.title.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
     return ListView.builder(
       itemCount: suggestions.length,
       itemBuilder: (context, index) {
-        final item = suggestions[index] as Activity;
+        final item = suggestions[index];
         return ListTile(
           title: Text(item.title),
           onTap: () {

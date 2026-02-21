@@ -4,45 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:myapp/main.dart';
 import 'package:provider/provider.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.child});
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key, required this.navigationShell});
 
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _getSelectedIndex(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/dashboard')) {
-      return 0;
-    } else if (location.startsWith('/history')) {
-      return 1;
-    } else if (location.startsWith('/analytics')) {
-      return 2;
-    } else if (location.startsWith('/profile')) {
-      return 3;
-    }
-    return 0;
-  }
-
-  void _onItemTapped(int index, BuildContext context) {
-    switch (index) {
-      case 0:
-        context.go('/dashboard');
-        break;
-      case 1:
-        context.go('/history');
-        break;
-      case 2:
-        context.go('/analytics');
-        break;
-      case 3:
-        context.go('/profile');
-        break;
-    }
+  void _onTap(BuildContext context, int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
@@ -62,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: widget.child,
+      body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -82,8 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Profile',
           ),
         ],
-        currentIndex: _getSelectedIndex(context),
-        onTap: (index) => _onItemTapped(index, context),
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) => _onTap(context, index),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/add'),

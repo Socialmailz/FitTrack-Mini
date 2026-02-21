@@ -24,6 +24,12 @@
 @import path_provider_foundation;
 #endif
 
+#if __has_include(<pedometer/PedometerPlugin.h>)
+#import <pedometer/PedometerPlugin.h>
+#else
+@import pedometer;
+#endif
+
 #if __has_include(<webview_flutter_wkwebview/WebViewFlutterPlugin.h>)
 #import <webview_flutter_wkwebview/WebViewFlutterPlugin.h>
 #else
@@ -36,6 +42,7 @@
   [FLTGoogleMobileAdsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleMobileAdsPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
   [PathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"PathProviderPlugin"]];
+  [PedometerPlugin registerWithRegistrar:[registry registrarForPlugin:@"PedometerPlugin"]];
   [WebViewFlutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"WebViewFlutterPlugin"]];
 }
 

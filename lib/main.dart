@@ -33,45 +33,57 @@ class ThemeProvider with ChangeNotifier {
   }
 }
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _shellNavigatorKey = GlobalKey<NavigatorState>();
+
 final _router = GoRouter(
+  navigatorKey: _rootNavigatorKey,
   initialLocation: '/dashboard',
   routes: [
-    ShellRoute(
-      builder: (BuildContext context, GoRouterState state, Widget child) {
-        return HomeScreen(child: child);
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return HomeScreen(navigationShell: navigationShell);
       },
-      routes: <RouteBase>[
-        GoRoute(
-          path: '/dashboard',
-          builder: (BuildContext context, GoRouterState state) {
-            return const DashboardScreen();
-          },
+      branches: [
+        StatefulShellBranch(
+          navigatorKey: _shellNavigatorKey,
+          routes: [
+            GoRoute(
+              path: '/dashboard',
+              builder: (context, state) => const DashboardScreen(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/history',
-          builder: (BuildContext context, GoRouterState state) {
-            return const HistoryScreen();
-          },
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/history',
+              builder: (context, state) => const HistoryScreen(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/add',
-          builder: (BuildContext context, GoRouterState state) {
-            return const AddActivityScreen();
-          },
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/analytics',
+              builder: (context, state) => const AnalyticsScreen(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/analytics',
-          builder: (BuildContext context, GoRouterState state) {
-            return const AnalyticsScreen();
-          },
-        ),
-        GoRoute(
-          path: '/profile',
-          builder: (BuildContext context, GoRouterState state) {
-            return const ProfileScreen();
-          },
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
         ),
       ],
+    ),
+    GoRoute(
+      path: '/add',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const AddActivityScreen(),
     ),
   ],
 );

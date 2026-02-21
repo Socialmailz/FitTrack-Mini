@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/data/activity_data.dart';
 import 'package:myapp/models/activity.dart';
@@ -48,7 +49,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         timestamp: _dateTime,
       );
       ActivityData.addActivity(newActivity);
-      Navigator.of(context).pop();
+      context.pop();
        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Activity added successfully!')),
       );
@@ -60,6 +61,10 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Log New Activity'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
