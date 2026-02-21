@@ -22,6 +22,8 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   // Mock list of past activities
   final List<dynamic> _activityItems = [];
+  List<dynamic> _filteredActivityItems = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -29,6 +31,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     // Generate a mixed list of activities and ads
     _activityItems.addAll(generateMockActivities());
     insertAds();
+    _filteredActivityItems = List.from(_activityItems);
+    _searchController.addListener(_filterActivities);
   }
 
   List<Activity> generateMockActivities() {
@@ -54,30 +58,145 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  void _filterActivities() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredActivityItems = _activityItems.where((item) {
+        if (item is Activity) {
+          return item.title.toLowerCase().contains(query) || item.subtitle.toLowerCase().contains(query);
+        }
+        return true; // Always show ads
+      }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Activity History'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(context: context, delegate: ActivitySearchDelegate(_activityItems));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () {
+              // Handle filter tap
+            },
+          ),
+        ],
       ),
-      body: ListView.separated(
-        itemCount: _activityItems.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+      body: ListView.builder(
+        itemCount: _filteredActivityItems.length,
         itemBuilder: (context, index) {
-          final item = _activityItems[index];
+          final item = _filteredActivityItems[index];
           if (item is Activity) {
-            return ListTile(
-              leading: Icon(item.icon, color: Theme.of(context).colorScheme.primary, size: 40),
-              title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(item.subtitle),
-              trailing: Text(item.trailing, style: TextStyle(color: Colors.grey[600])),
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ListTile(
+                leading: Icon(item.icon, color: Theme.of(context).colorScheme.primary, size: 40),
+                title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(item.subtitle),
+                trailing: Text(item.trailing, style: TextStyle(color: Colors.grey[600])),
+              ),
             );
           } else if (item is AdNative) {
-            return item; // Render the native ad widget directly
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: item,
+            ); // Render the native ad widget directly
           }
           return const SizedBox.shrink();
         },
       ),
+    );
+  }
+}
+
+class ActivitySearchDelegate extends SearchDelegate {
+  final List<dynamic> _activityItems;
+
+  ActivitySearchDelegate(this._activityItems);
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final results = _activityItems.where((item) {
+      if (item is Activity) {
+        return item.title.toLowerCase().contains(query.toLowerCase()) || item.subtitle.toLowerCase().contains(query.toLowerCase());
+      }
+      return false;
+    }).toList();
+
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final item = results[index] as Activity;
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: ListTile(
+            leading: Icon(item.icon, color: Theme.of(context).colorScheme.primary, size: 40),
+            title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(item.subtitle),
+            trailing: Text(item.trailing, style: TextStyle(color: Colors.grey[600])),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestions = _activityItems.where((item) {
+      if (item is Activity) {
+        return item.title.toLowerCase().contains(query.toLowerCase());
+      }
+      return false;
+    }).toList();
+
+    return ListView.builder(
+      itemCount: suggestions.length,
+      itemBuilder: (context, index) {
+        final item = suggestions[index] as Activity;
+        return ListTile(
+          title: Text(item.title),
+          onTap: () {
+            query = item.title;
+            showResults(context);
+          },
+        );
+      },
     );
   }
 }

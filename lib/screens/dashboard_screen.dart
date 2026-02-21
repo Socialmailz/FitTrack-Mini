@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:countup/countup.dart';
@@ -55,50 +56,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: _buildAppBar(colorScheme),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-        children: [
-          _buildWelcomeSection(textTheme, colorScheme),
-          const SizedBox(height: 24),
-          _buildDailySummaryCard(textTheme, colorScheme),
-          const SizedBox(height: 24),
-          _buildQuickStartButtons(textTheme, colorScheme),
-          const SizedBox(height: 24),
-          _buildWeeklyProgressCard(textTheme, colorScheme),
-          const SizedBox(height: 24),
-          _buildWaterIntakeCard(textTheme, colorScheme),
-          const SizedBox(height: 24),
-          _buildAchievementsCard(textTheme, colorScheme),
-          const SizedBox(height: 24),
-          const AdBanner(), // AdMob Banner
-          const SizedBox(height: 20),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isWide = constraints.maxWidth > 600;
+        int crossAxisCount = isWide ? 4 : 2;
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              children: [
+                _buildWelcomeSection(textTheme, colorScheme),
+                const SizedBox(height: 24),
+                _buildDailySummaryCard(textTheme, colorScheme),
+                const SizedBox(height: 24),
+                _buildQuickStartButtons(context, textTheme, colorScheme, crossAxisCount),
+                const SizedBox(height: 24),
+                _buildWeeklyProgressCard(context, textTheme, colorScheme),
+                const SizedBox(height: 24),
+                _buildWaterIntakeCard(textTheme, colorScheme),
+                const SizedBox(height: 24),
+                _buildAchievementsCard(textTheme, colorScheme),
+                const SizedBox(height: 24),
+                const AdBanner(), // AdMob Banner
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
   
-  AppBar _buildAppBar(ColorScheme colorScheme) {
-    return AppBar(
-      leadingWidth: 40,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 20.0),
-        child: Image.asset('assets/logo.png', color: colorScheme.primary),
-      ),
-      title: const Text('FitTrack Mini', style: TextStyle(fontWeight: FontWeight.bold)),
-      actions: [
-        IconButton(icon: const Icon(Icons.notifications_none_outlined, size: 28), onPressed: () {}),
-        IconButton(icon: const Icon(Icons.settings_outlined, size: 28), onPressed: () {}),
-        const SizedBox(width: 12),
-      ],
-      backgroundColor: colorScheme.surface,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      foregroundColor: colorScheme.onSurface,
-    );
-  }
-
   Widget _buildWelcomeSection(TextTheme textTheme, ColorScheme colorScheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,36 +165,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildQuickStartButtons(TextTheme textTheme, ColorScheme colorScheme) {
+  Widget _buildQuickStartButtons(BuildContext context, TextTheme textTheme, ColorScheme colorScheme, int crossAxisCount) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Quick Start', style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         GridView.count(
-          crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 2.5,
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 2.5,
           children: [
-            _quickStartWorkoutButton(Icons.directions_walk, 'Start Walk'),
-            _quickStartWorkoutButton(Icons.directions_run, 'Start Run'),
-            _quickStartWorkoutButton(Icons.directions_bike, 'Start Cycling'),
-            _quickStartWorkoutButton(Icons.fitness_center, 'Custom Workout'),
+            _quickStartWorkoutButton(context, Icons.directions_walk, 'Start Walk'),
+            _quickStartWorkoutButton(context, Icons.directions_run, 'Start Run'),
+            _quickStartWorkoutButton(context, Icons.directions_bike, 'Start Cycling'),
+            _quickStartWorkoutButton(context, Icons.fitness_center, 'Custom Workout'),
           ],
         ),
       ],
     );
   }
 
-  Widget _quickStartWorkoutButton(IconData icon, String label) {
+  Widget _quickStartWorkoutButton(BuildContext context, IconData icon, String label) {
     return ElevatedButton.icon(
-      onPressed: () {},
+      onPressed: () => context.go('/add'),
       icon: Icon(icon, size: 28),
       label: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-      style: ElevatedButton.styleFrom(elevation: 0, backgroundColor: Theme.of(context).cardColor, foregroundColor: Theme.of(context).colorScheme.onSurface, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        backgroundColor: Theme.of(context).cardColor,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
     );
   }
 
-  Widget _buildWeeklyProgressCard(TextTheme textTheme, ColorScheme colorScheme) {
+  Widget _buildWeeklyProgressCard(BuildContext context, TextTheme textTheme, ColorScheme colorScheme) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -213,9 +212,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Text("Weekly Progress", style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            SizedBox(height: 150, child: BarChart(_buildBarChartData(colorScheme), swapAnimationDuration: const Duration(milliseconds: 450), swapAnimationCurve: Curves.easeInOutSine)),
+            SizedBox(
+              height: 150,
+              child: BarChart(
+                _buildBarChartData(colorScheme),
+                swapAnimationDuration: const Duration(milliseconds: 450),
+                swapAnimationCurve: Curves.easeInOutSine,
+              ),
+            ),
             const SizedBox(height: 16),
-            Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () {}, child: const Text('View Detailed Stats →')))
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => context.go('/analytics'),
+                child: const Text('View Detailed Stats →'),
+              ),
+            )
           ],
         ),
       ),
@@ -226,15 +238,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return BarChartData(
       alignment: BarChartAlignment.spaceAround,
       maxY: (weeklySteps.values.reduce((a,b) => a > b ? a : b) * 1.2).toDouble(),
-      barTouchData: BarTouchData(touchTooltipData: BarTouchTooltipData(getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem((rod.toY - 1).toStringAsFixed(0), const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))),
-      titlesData: FlTitlesData(show: true, topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)), rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)), leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)), bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (double value, TitleMeta meta) {
-        const style = TextStyle(fontWeight: FontWeight.bold, fontSize: 14);
-        String text; switch (value.toInt()) { case 0: text = 'M'; break; case 1: text = 'T'; break; case 2: text = 'W'; break; case 3: text = 'T'; break; case 4: text = 'F'; break; case 5: text = 'S'; break; case 6: text = 'S'; break; default: text = ''; break; }
-        return SideTitleWidget(child: Text(text, style: style), axisSide: meta.axisSide);
-      }))),
+      barTouchData: BarTouchData(
+        touchTooltipData: BarTouchTooltipData(
+          getTooltipItem: (group, groupIndex, rod, rodIndex) =>
+              BarTooltipItem((rod.toY - 1).toStringAsFixed(0), const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            getTitlesWidget: (double value, TitleMeta meta) {
+              const style = TextStyle(fontWeight: FontWeight.bold, fontSize: 14);
+              String text;
+              switch (value.toInt()) {
+                case 0: text = 'M'; break;
+                case 1: text = 'T'; break;
+                case 2: text = 'W'; break;
+                case 3: text = 'T'; break;
+                case 4: text = 'F'; break;
+                case 5: text = 'S'; break;
+                case 6: text = 'S'; break;
+                default: text = ''; break;
+              }
+              return SideTitleWidget(child: Text(text, style: style), axisSide: meta.axisSide);
+            },
+          ),
+        ),
+      ),
       borderData: FlBorderData(show: false),
       gridData: const FlGridData(show: false),
-      barGroups: weeklySteps.entries.map((entry) => BarChartGroupData(x: entry.key, barRods: [BarChartRodData(toY: entry.value.toDouble(), color: entry.key == DateTime.now().weekday - 1 ? colorScheme.primary : colorScheme.secondary, width: 20, borderRadius: BorderRadius.circular(6))])).toList(),
+      barGroups: weeklySteps.entries
+          .map((entry) => BarChartGroupData(x: entry.key, barRods: [
+                BarChartRodData(
+                  toY: entry.value.toDouble(),
+                  color: entry.key == DateTime.now().weekday - 1 ? colorScheme.primary : colorScheme.secondary,
+                  width: 20,
+                  borderRadius: BorderRadius.circular(6),
+                )
+              ]))
+          .toList(),
     );
   }
 
@@ -245,11 +292,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Water Intake', style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)), Text('${currentWater.toStringAsFixed(0)} / ${waterGoal.toStringAsFixed(0)} ml', style: textTheme.titleMedium)]),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Water Intake', style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text('${currentWater.toStringAsFixed(0)} / ${waterGoal.toStringAsFixed(0)} ml', style: textTheme.titleMedium),
+              ],
+            ),
             const SizedBox(height: 16),
-            LinearPercentIndicator(percent: waterProgress, lineHeight: 20.0, barRadius: const Radius.circular(10), progressColor: colorScheme.primary, backgroundColor: colorScheme.primary.withOpacity(0.2), animation: true, animationDuration: 1000),
+            LinearPercentIndicator(
+              percent: waterProgress,
+              lineHeight: 20.0,
+              barRadius: const Radius.circular(10),
+              progressColor: colorScheme.primary,
+              backgroundColor: colorScheme.primary.withOpacity(0.2),
+              animation: true,
+              animationDuration: 1000,
+            ),
             const SizedBox(height: 16),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [ElevatedButton.icon(onPressed: _addWater, icon: const Icon(Icons.add), label: const Text("Add 250ml")), TextButton(onPressed: _resetWater, child: const Text('Reset'))])
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(onPressed: _addWater, icon: const Icon(Icons.add), label: const Text("Add 250ml")),
+                TextButton(onPressed: _resetWater, child: const Text('Reset')),
+              ],
+            )
           ],
         ),
       ),

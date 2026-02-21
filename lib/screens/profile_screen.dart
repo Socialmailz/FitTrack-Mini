@@ -1,63 +1,173 @@
 
 import 'package:flutter/material.dart';
-import 'package:myapp/data/activity_data.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+  File? _image;
+  final picker = ImagePicker();
+
+  // Mock User Data
+  String _name = "Alex Doe";
+  String _email = "alex.doe@example.com";
+  String _goal = "Lose 10 pounds";
+  bool _notificationsEnabled = true;
+
+  Future<void> _getImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      }
+    });
+  }
+
+  void _saveProfile() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      // Here you would typically save the data to a backend or local storage
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile saved successfully!')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-    final totalActivities = ActivityData.activities.length;
-    final totalDistance = ActivityData.activities.fold(0.0, (sum, item) => sum + item.distance);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('My Profile', style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary)),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 20),
-            CircleAvatar(
-              radius: 65,
-              backgroundColor: colorScheme.primary.withOpacity(0.1),
-              child: const CircleAvatar(
-                radius: 60,
-                backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'), // Placeholder image
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isWide = constraints.maxWidth > 600;
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: ListView(
+                padding: const EdgeInsets.all(24.0),
+                children: [
+                  _buildProfileHeader(textTheme),
+                  const SizedBox(height: 32),
+                  Card(
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextFormField(
+                              initialValue: _name,
+                              decoration: const InputDecoration(labelText: 'Full Name'),
+                              onSaved: (value) => _name = value!,
+                              validator: (value) => value!.isEmpty ? 'Please enter your name' : null,
+                            ),
+                            const SizedBox(height: 20),
+                            TextFormField(
+                              initialValue: _email,
+                              decoration: const InputDecoration(labelText: 'Email Address'),
+                              keyboardType: TextInputType.emailAddress,
+                              onSaved: (value) => _email = value!,
+                              validator: (value) => !value!.contains('@') ? 'Please enter a valid email' : null,
+                            ),
+                            const SizedBox(height: 20),
+                            TextFormField(
+                              initialValue: _goal,
+                              decoration: const InputDecoration(labelText: 'Fitness Goal'),
+                              onSaved: (value) => _goal = value!,
+                            ),
+                            const SizedBox(height: 32),
+                            ElevatedButton(
+                              onPressed: _saveProfile,
+                              child: const Text('Save Changes'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSettingsSection(textTheme),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            Text('Alex Doe', style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('alex.doe@example.com', style: textTheme.titleMedium?.copyWith(color: Colors.grey[600])),
-            const SizedBox(height: 40),
-            const Divider(),
-            _buildStatCard(textTheme, colorScheme, Icons.calendar_today, 'Joined', 'January 2024'),
-            const Divider(),
-            _buildStatCard(textTheme, colorScheme, Icons.directions_run, 'Total Activities', totalActivities.toString()),
-            const Divider(),
-            _buildStatCard(textTheme, colorScheme, Icons.map_outlined, 'Total Distance', '${totalDistance.toStringAsFixed(2)} km'),
-            const Divider(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildStatCard(TextTheme textTheme, ColorScheme colorScheme, IconData icon, String label, String value) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-      leading: Icon(icon, color: colorScheme.primary, size: 30),
-      title: Text(label, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-      trailing: Text(
-        value,
-        style: textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: colorScheme.secondary,
+  Widget _buildProfileHeader(TextTheme textTheme) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _getImage,
+          child: CircleAvatar(
+            radius: 60,
+            backgroundImage: _image != null ? FileImage(_image!) : null,
+            child: _image == null
+                ? const Icon(Icons.camera_alt, size: 50, color: Colors.grey)
+                : null,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(_name, style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 4),
+        Text(_email, style: textTheme.titleMedium?.copyWith(color: Colors.grey[600])),
+      ],
+    );
+  }
+
+  Widget _buildSettingsSection(TextTheme textTheme) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text('Account Settings', style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            ),
+            SwitchListTile(
+              title: const Text('Enable Notifications'),
+              value: _notificationsEnabled,
+              onChanged: (bool value) {
+                setState(() {
+                  _notificationsEnabled = value;
+                });
+              },
+              secondary: const Icon(Icons.notifications_active_outlined),
+            ),
+            ListTile(
+              leading: const Icon(Icons.security_outlined),
+              title: const Text('Privacy & Security'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: const Text('Help & Support'),
+              onTap: () {},
+            ),
+             ListTile(
+              leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
+              title: Text('Logout', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              onTap: () {
+                // Handle logout
+              },
+            ),
+          ],
         ),
       ),
     );

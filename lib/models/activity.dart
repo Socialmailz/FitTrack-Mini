@@ -1,14 +1,14 @@
 
 class Activity {
   final String type;
-  final int duration;
   final double distance;
-  final DateTime date;
+  final Duration duration;
+  final DateTime timestamp;
 
   Activity({
     required this.type,
-    required this.duration,
     required this.distance,
-    required this.date,
+    required this.duration,
+    required this.timestamp,
   });
 }
