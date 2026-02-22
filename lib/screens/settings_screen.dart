@@ -14,16 +14,17 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late UserSettings _userSettings;
+  UserSettings? _userSettings;
 
   @override
   void initState() {
     super.initState();
-    _userSettings = Hive.box<UserSettings>(DatabaseService.userSettingsBoxName).get(0)!;
+    _userSettings = Hive.box<UserSettings>(DatabaseService.userSettingsBoxName).get(0);
   }
 
   void _showWaterGoalDialog() {
-    final TextEditingController controller = TextEditingController(text: _userSettings.dailyWaterGoal.toString());
+    if (_userSettings == null) return;
+    final TextEditingController controller = TextEditingController(text: _userSettings!.dailyWaterGoal.toString());
     showDialog(
       context: context,
       builder: (context) {
@@ -44,8 +45,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final newGoal = int.tryParse(controller.text);
                 if (newGoal != null && newGoal > 0) {
                   setState(() {
-                    _userSettings.dailyWaterGoal = newGoal;
-                    _userSettings.save();
+                    _userSettings!.dailyWaterGoal = newGoal;
+                    _userSettings!.save();
                   });
                   Navigator.of(context).pop();
                 }
@@ -79,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ListTile(
             title: const Text('Daily Water Goal'),
-            subtitle: Text('${_userSettings.dailyWaterGoal} ml'),
+            subtitle: Text('${_userSettings?.dailyWaterGoal ?? 2000} ml'),
             leading: const Icon(Icons.local_drink),
             onTap: _showWaterGoalDialog,
           ),
