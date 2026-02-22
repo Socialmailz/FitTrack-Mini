@@ -1,38 +1,35 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_settings.dart';
+part of 'daily_steps.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class UserSettingsAdapter extends TypeAdapter<UserSettings> {
+class DailyStepsAdapter extends TypeAdapter<DailySteps> {
   @override
-  final int typeId = 2;
+  final int typeId = 3;
 
   @override
-  UserSettings read(BinaryReader reader) {
+  DailySteps read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return UserSettings(
-      isDarkMode: fields[0] as bool,
-      username: fields[1] as String,
-      dailyWaterGoal: fields[2] as int,
+    return DailySteps(
+      date: fields[0] as DateTime,
+      steps: fields[1] as int,
     );
   }
 
   @override
-  void write(BinaryWriter writer, UserSettings obj) {
+  void write(BinaryWriter writer, DailySteps obj) {
     writer
-      ..writeByte(3)
-      ..writeByte(0)
-      ..write(obj.isDarkMode)
-      ..writeByte(1)
-      ..write(obj.username)
       ..writeByte(2)
-      ..write(obj.dailyWaterGoal);
+      ..writeByte(0)
+      ..write(obj.date)
+      ..writeByte(1)
+      ..write(obj.steps);
   }
 
   @override
@@ -41,7 +38,7 @@ class UserSettingsAdapter extends TypeAdapter<UserSettings> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UserSettingsAdapter &&
+      other is DailyStepsAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

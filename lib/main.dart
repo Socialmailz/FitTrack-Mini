@@ -9,6 +9,7 @@ import 'package:myapp/screens/history_screen.dart';
 import 'package:myapp/screens/home_screen.dart';
 import 'package:myapp/screens/settings/settings_screen.dart';
 import 'package:myapp/services/database_service.dart';
+import 'package:myapp/services/step_service.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/providers/theme_provider.dart';
@@ -17,10 +18,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await DatabaseService.initDatabase();
+  final stepService = StepService();
+  await stepService.init();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
-      child: const MyApp(),
+    Provider<StepService>(
+      create: (_) => stepService,
+      child: ChangeNotifierProvider(
+        create: (context) => ThemeProvider(),
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -201,3 +207,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
+

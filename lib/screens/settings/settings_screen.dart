@@ -23,7 +23,8 @@ class SettingsScreen extends StatelessWidget {
             trailing: Switch(
               value: themeProvider.themeMode == ThemeMode.dark,
               onChanged: (value) {
-                themeProvider.toggleTheme();
+                final newTheme = value ? ThemeMode.dark : ThemeMode.light;
+                themeProvider.setTheme(newTheme);
               },
             ),
           ),

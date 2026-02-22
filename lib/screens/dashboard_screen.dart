@@ -2,12 +2,15 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:myapp/models/activity.dart';
+import 'package:myapp/models/user_settings.dart';
 import 'package:myapp/models/water.dart';
 import 'package:myapp/services/database_service.dart';
+import 'package:myapp/services/step_service.dart';
 import 'package:myapp/widgets/activity_card.dart';
 import 'package:myapp/widgets/home_header.dart';
 import 'package:myapp/widgets/metric_card.dart';
 import 'package:myapp/widgets/water_card.dart';
+import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -19,11 +22,31 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final DatabaseService _databaseService = DatabaseService();
   late Water _todayWater;
+  late UserSettings _userSettings;
+  late StepService _stepService;
+  int _todaySteps = 0;
+  double _todayDistance = 0.0;
 
   @override
   void initState() {
     super.initState();
+    _userSettings = Hive.box<UserSettings>(DatabaseService.userSettingsBoxName).get(0)!;
     _todayWater = _databaseService.getWaterForDay(DateTime.now());
+    _stepService = Provider.of<StepService>(context, listen: false);
+    _stepService.stepCountStream.listen((steps) {
+      if (mounted) {
+        setState(() {
+          _todaySteps = steps;
+        });
+      }
+    });
+    _stepService.distanceStream.listen((distance) {
+      if (mounted) {
+        setState(() {
+          _todayDistance = distance;
+        });
+      }
+    });
   }
 
   void _addWater() {
@@ -43,30 +66,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const HomeHeader(title: 'Hello!', subtitle: 'Welcome back to your health dashboard.'),
-              const SizedBox(height: 24),
-              _buildMetrics(),
-              const SizedBox(height: 24),
-              ValueListenableBuilder<Box<Water>>(
-                valueListenable: DatabaseService.getWaterBox().listenable(),
-                builder: (context, box, _) {
-                  _todayWater = _databaseService.getWaterForDay(DateTime.now());
-                  return WaterCard(
-                    waterIntake: _todayWater.milliliters,
-                    onAddWater: _addWater,
-                    onResetWater: _resetWater,
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              _buildRecentActivities(),
-            ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const HomeHeader(title: 'Hello!', subtitle: 'Welcome back to your health dashboard.'),
+                const SizedBox(height: 20),
+                _buildMetrics(),
+                const SizedBox(height: 20),
+                ValueListenableBuilder<Box<Water>>(
+                  valueListenable: DatabaseService.getWaterBox().listenable(),
+                  builder: (context, box, _) {
+                    _todayWater = _databaseService.getWaterForDay(DateTime.now());
+                    return WaterCard(
+                      waterIntake: _todayWater.milliliters,
+                      waterGoal: _userSettings.dailyWaterGoal,
+                      onAddWater: _addWater,
+                      onResetWater: _resetWater,
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+                _buildRecentActivities(),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -74,26 +101,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMetrics() {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Today\'s Progress',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: MetricCard(
                 title: 'Steps',
-                value: '10,482',
+                value: '$_todaySteps',
                 icon: Icons.directions_walk,
                 color: Colors.orange,
               ),
             ),
-            SizedBox(width: 16),
-            Expanded(
+            const SizedBox(width: 16),
+            const Expanded(
               child: MetricCard(
                 title: 'Calories',
                 value: '320 kcal',
@@ -103,10 +130,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(
+            const Expanded(
               child: MetricCard(
                 title: 'Active Time',
                 value: '45 min',
@@ -114,11 +141,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: Colors.blue,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: MetricCard(
                 title: 'Distance',
-                value: '2.5 km',
+                value: '${_todayDistance.toStringAsFixed(2)} km',
                 icon: Icons.route,
                 color: Colors.green,
               ),

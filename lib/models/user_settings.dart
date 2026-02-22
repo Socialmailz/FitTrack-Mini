@@ -11,8 +11,12 @@ class UserSettings extends HiveObject {
   @HiveField(1)
   String username;
 
+  @HiveField(2)
+  int dailyWaterGoal; // in ml
+
   UserSettings({
     this.isDarkMode = false,
     this.username = 'User',
+    this.dailyWaterGoal = 2000,
   });
 }

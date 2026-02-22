@@ -18,6 +18,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
   String? _activityType;
   int? _duration;
   int? _calories;
+  double? _distance;
   DateTime _dateTime = DateTime.now();
 
   final List<String> _activityTypes = ['Walking', 'Running', 'Cycling', 'Swimming', 'Workout'];
@@ -44,39 +45,39 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Estimate calories if not provided
       if (_calories == null && _duration != null) {
-        _calories = _estimateCalories(_activityType!, _duration!);
+        _calories = _estimateCalories(_activityType!, _duration!, _distance);
       }
 
       final newActivity = Activity(
         type: _activityType!,
         duration: _duration ?? 0,
         calories: _calories ?? 0,
-        distance: 0, // No distance tracking for now
+        distance: _distance ?? 0,
         timestamp: _dateTime,
       );
       
       Hive.box<Activity>(DatabaseService.activitiesBoxName).add(newActivity);
-      context.pop();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Activity added successfully!')),
       );
+      context.pop();
     }
   }
 
-  int _estimateCalories(String activityType, int duration) {
-    // A very rough estimation
+  int _estimateCalories(String activityType, int duration, double? distance) {
     switch (activityType) {
       case 'Running':
-        return duration * 10;
+        return (distance != null) ? (distance * duration * 0.1).toInt() : duration * 10;
       case 'Cycling':
-        return duration * 8;
+        return (distance != null) ? (distance * duration * 0.05).toInt() : duration * 8;
       case 'Swimming':
         return duration * 12;
       case 'Workout':
         return duration * 5;
       case 'Walking':
+       return (distance != null) ? (distance * duration * 0.08).toInt() : duration * 4;
       default:
         return duration * 4;
     }
@@ -89,7 +90,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         title: const Text('Log New Activity'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/'),
         ),
       ),
       body: LayoutBuilder(
@@ -121,7 +122,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Duration (minutes)'),
                         keyboardType: TextInputType.number,
-                        onSaved: (value) => _duration = int.tryParse(value!),
+                        onSaved: (value) => _duration = int.tryParse(value ?? ''),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a duration';
@@ -129,11 +130,19 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
                           return null;
                         },
                       ),
+                      if (_activityType == 'Running' || _activityType == 'Walking' || _activityType == 'Cycling')
+                        const SizedBox(height: 20),
+                      if (_activityType == 'Running' || _activityType == 'Walking' || _activityType == 'Cycling')
+                        TextFormField(
+                          decoration: const InputDecoration(labelText: 'Distance (km)'),
+                          keyboardType: TextInputType.number,
+                          onSaved: (value) => _distance = double.tryParse(value ?? ''),
+                        ),
                       const SizedBox(height: 20),
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Calories Burned (optional)'),
                         keyboardType: TextInputType.number,
-                        onSaved: (value) => _calories = int.tryParse(value!),
+                        onSaved: (value) => _calories = int.tryParse(value ?? ''),
                       ),
                       const SizedBox(height: 30),
                       Row(

@@ -22,31 +22,34 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      body: ValueListenableBuilder<Box<Activity>>(
-        valueListenable: DatabaseService.getActivitiesBox().listenable(),
-        builder: (context, box, _) {
-          final activities = box.values.toList().cast<Activity>();
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              bool isWide = constraints.maxWidth > 600;
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(textTheme),
-                    const SizedBox(height: 8),
-                    _buildSummaryCards(isWide, activities),
-                    const SizedBox(height: 24),
-                    _buildChartCard(textTheme, isWide: isWide, activities: activities),
-                    const SizedBox(height: 24),
-                    _buildActivityBreakdown(textTheme, isWide: isWide, activities: activities),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+      body: SafeArea(
+        child: ValueListenableBuilder<Box<Activity>>(
+          valueListenable: DatabaseService.getActivitiesBox().listenable(),
+          builder: (context, box, _) {
+            final activities = box.values.toList().cast<Activity>();
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                bool isWide = constraints.maxWidth > 600;
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(textTheme),
+                      const SizedBox(height: 16),
+                      _buildSummaryCards(isWide, activities),
+                      const SizedBox(height: 20),
+                      _buildChartCard(textTheme, isWide: isWide, activities: activities),
+                      const SizedBox(height: 20),
+                      _buildActivityBreakdown(textTheme, isWide: isWide, activities: activities),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -116,7 +119,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: isWide ? 1.6 : 1.3,
+      childAspectRatio: isWide ? 1.6 : 1.2,
       children: [
         _summaryCard(Icons.local_fire_department_rounded, 'Total Activities',
             summaryData['totalActivities']!.toStringAsFixed(0), Colors.orange),
@@ -135,17 +138,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
               backgroundColor: color.withAlpha(38),
-              radius: 22,
-              child: Icon(icon, color: color, size: 24),
+              radius: 20,
+              child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               title,
               style: Theme.of(context)
@@ -173,16 +176,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Distance Over Time',
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
-            SizedBox(
-                height: isWide ? 300 : 200, child: LineChart(_getLineChartData(activities))),
+            Text('Distance Over Time', style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            SizedBox(height: isWide ? 280 : 180, child: LineChart(_getLineChartData(activities))),
           ],
         ),
       ),
@@ -196,79 +196,57 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: const SizedBox(
-          height: 200,
-          child: Center(
-              child: Text('No activity data available for this period.')),
+          height: 180,
+          child: Center(child: Text('No activity data available for this period.')),
         ),
       );
     }
 
-    final colors = [
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.red,
-      Colors.purple,
-      Colors.teal
-    ];
+    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple, Colors.teal];
 
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: isWide
             ? Row(
                 children: [
-                  Expanded(
-                      flex: 2,
-                      child: _buildBreakdownDetails(textTheme, breakdownData, colors)),
+                  Expanded(flex: 2, child: _buildBreakdownDetails(textTheme, breakdownData, colors)),
                   Expanded(
                     flex: 3,
-                    child: SizedBox(
-                        height: 180,
-                        child: PieChart(_getPieChartData(breakdownData, colors))),
+                    child: SizedBox(height: 160, child: PieChart(_getPieChartData(breakdownData, colors))),
                   ),
                 ],
               )
             : Column(
                 children: [
                   _buildBreakdownDetails(textTheme, breakdownData, colors),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                      height: 150,
-                      child: PieChart(_getPieChartData(breakdownData, colors))),
+                  const SizedBox(height: 16),
+                  SizedBox(height: 140, child: PieChart(_getPieChartData(breakdownData, colors))),
                 ],
               ),
       ),
     );
   }
 
-  Widget _buildBreakdownDetails(TextTheme textTheme,
-      Map<String, double> breakdownData, List<Color> colors) {
+  Widget _buildBreakdownDetails(
+      TextTheme textTheme, Map<String, double> breakdownData, List<Color> colors) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Activity Breakdown',
-            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 20),
+        Text('Activity Breakdown', style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
         ...breakdownData.entries.mapIndexed((index, entry) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
+            padding: const EdgeInsets.only(bottom: 10.0),
             child: Row(
               children: [
                 Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: colors[index % colors.length],
-                      shape: BoxShape.circle,
-                    )),
+                    width: 12, height: 12,
+                    decoration: BoxDecoration(color: colors[index % colors.length], shape: BoxShape.circle)),
                 const SizedBox(width: 12),
-                Text(
-                  '${entry.key}: ${entry.value.toStringAsFixed(1)} km',
-                  style: textTheme.bodyMedium,
-                ),
+                Text('${entry.key}: ${entry.value.toStringAsFixed(1)} km', style: textTheme.bodyMedium),
               ],
             ),
           );
@@ -295,26 +273,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Map<String, double> _getSummaryData(List<Activity> allActivities) {
     final filteredActivities = _getFilteredActivities(allActivities);
     if (filteredActivities.isEmpty) {
-      return {
-        'totalActivities': 0,
-        'totalDistance': 0,
-        'totalDuration': 0,
-        'avgCalories': 0
-      };
+      return {'totalActivities': 0, 'totalDistance': 0, 'totalDuration': 0, 'avgCalories': 0};
     }
 
     double totalDistance = filteredActivities.map((a) => a.distance).sum;
-    double totalDuration =
-        filteredActivities.map((a) => a.duration).sum.toDouble();
+    double totalDuration = filteredActivities.map((a) => a.duration).sum.toDouble();
     double totalCalories = filteredActivities.map((a) => a.calories).sum.toDouble();
 
     return {
       'totalActivities': filteredActivities.length.toDouble(),
       'totalDistance': totalDistance,
       'totalDuration': totalDuration, // in minutes
-      'avgCalories': filteredActivities.isEmpty
-          ? 0
-          : totalCalories / filteredActivities.length,
+      'avgCalories': filteredActivities.isEmpty ? 0 : totalCalories / filteredActivities.length,
     };
   }
 
@@ -322,8 +292,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final filteredActivities = _getFilteredActivities(allActivities);
     final data = <String, double>{};
     for (var activity in filteredActivities) {
-      data.update(activity.type, (value) => value + activity.distance,
-          ifAbsent: () => activity.distance);
+      data.update(activity.type, (value) => value + activity.distance, ifAbsent: () => activity.distance);
     }
     return data;
   }
@@ -343,26 +312,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       } else {
         key = act.timestamp.month;
       }
-      dataMap.update(key, (value) => value + act.distance,
-          ifAbsent: () => act.distance);
+      dataMap.update(key, (value) => value + act.distance, ifAbsent: () => act.distance);
     }
 
-    List<FlSpot> spots =
-        dataMap.entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
-   
-    if (spots.isEmpty) spots.add(FlSpot.zero);
+    List<FlSpot> spots = dataMap.entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
 
+    if (spots.isEmpty) spots.add(FlSpot.zero);
 
     return LineChartData(
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,
-        getDrawingHorizontalLine: (value) {
-          return FlLine(
-            color: Colors.grey.withAlpha(25),
-            strokeWidth: 1,
-          );
-        },
+        getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withAlpha(25), strokeWidth: 1),
       ),
       titlesData: const FlTitlesData(
         leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -375,9 +336,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         LineChartBarData(
           spots: spots,
           isCurved: true,
-          gradient: LinearGradient(
-            colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.3)],
-          ),
+          gradient: LinearGradient(colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.3)]),
           barWidth: 4,
           isStrokeCapRound: true,
           dotData: const FlDotData(show: false),
@@ -385,8 +344,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             show: true,
             gradient: LinearGradient(
               colors: [colorScheme.primary.withOpacity(0.3), colorScheme.primary.withOpacity(0.0)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              begin: Alignment.topCenter, end: Alignment.bottomCenter,
             ),
           ),
         ),
@@ -394,23 +352,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  PieChartData _getPieChartData(
-      Map<String, double> breakdownData, List<Color> colors) {
+  PieChartData _getPieChartData(Map<String, double> breakdownData, List<Color> colors) {
     return PieChartData(
       sectionsSpace: 4,
       centerSpaceRadius: 40,
       sections: breakdownData.entries.mapIndexed((index, entry) {
-        final double percentage =
-            (entry.value / breakdownData.values.sum * 100);
+        final double percentage = (entry.value / breakdownData.values.sum * 100);
         return PieChartSectionData(
           color: colors[index % colors.length],
           value: entry.value,
           title: '${percentage.toStringAsFixed(0)}%',
-          radius: 60,
-          titleStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.white),
+          radius: 50,
+          titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
         );
       }).toList(),
     );

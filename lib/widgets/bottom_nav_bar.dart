@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/screens/dashboard_screen.dart';
 import 'package:myapp/screens/history_screen.dart';
 import 'package:myapp/screens/analytics_screen.dart';
@@ -20,9 +21,13 @@ class _BottomNavBarState extends State<BottomNavBar> {
   ];
 
   void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    if (index == 1) {
+      context.go('/add-activity');
+    } else {
+      setState(() {
+        _currentIndex = index > 1 ? index -1: index;
+      });
+    }
   }
 
   @override
@@ -37,11 +42,15 @@ class _BottomNavBarState extends State<BottomNavBar> {
         onTap: _onTabTapped,
         selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed, // Ensures the bottom nav bar is fixed
+        type: BottomNavigationBarType.fixed, 
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add),
+            label: 'Add',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
