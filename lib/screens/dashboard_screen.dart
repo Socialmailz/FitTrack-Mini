@@ -22,7 +22,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final DatabaseService _databaseService = DatabaseService();
   late Water _todayWater;
-  UserSettings? _userSettings;
+  late UserSettings _userSettings;
   late StepService _stepService;
   int _todaySteps = 0;
   double _todayDistance = 0.0;
@@ -30,7 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _userSettings = Hive.box<UserSettings>(DatabaseService.userSettingsBoxName).get(0);
+    _userSettings = DatabaseService.getUserSettingsBox().get(DatabaseService.userSettingsKey)!;
     _todayWater = _databaseService.getWaterForDay(DateTime.now());
     _stepService = Provider.of<StepService>(context, listen: false);
     _stepService.stepCountStream.listen((steps) {
@@ -83,7 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _todayWater = _databaseService.getWaterForDay(DateTime.now());
                     return WaterCard(
                       waterIntake: _todayWater.milliliters,
-                      waterGoal: _userSettings?.dailyWaterGoal ?? 2000,
+                      waterGoal: _userSettings.dailyWaterGoal,
                       onAddWater: _addWater,
                       onResetWater: _resetWater,
                     );

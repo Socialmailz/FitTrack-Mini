@@ -11,42 +11,49 @@ import '../models/steps.dart';
 class DatabaseService {
   static const String activitiesBoxName = 'activities';
   static const String stepsBoxName = 'steps';
-  static const String settingsBoxName = 'settings';
+  static const String userSettingsBoxName = 'settings';
   static const String waterBoxName = 'water';
+
+  static const String userSettingsKey = 'user_settings';
 
   static Future<void> initDatabase() async {
     final appDocumentDir = await getApplicationDocumentsDirectory();
     Hive.init(appDocumentDir.path);
 
-    Hive.registerAdapter(ActivityAdapter());
-    Hive.registerAdapter(StepsAdapter());
-    Hive.registerAdapter(UserSettingsAdapter());
-    Hive.registerAdapter(WaterAdapter());
+    // Register adapters if they haven't been registered yet
+    if (!Hive.isAdapterRegistered(ActivityAdapter().typeId)) {
+      Hive.registerAdapter(ActivityAdapter());
+    }
+    if (!Hive.isAdapterRegistered(StepsAdapter().typeId)) {
+      Hive.registerAdapter(StepsAdapter());
+    }
+    if (!Hive.isAdapterRegistered(UserSettingsAdapter().typeId)) {
+      Hive.registerAdapter(UserSettingsAdapter());
+    }
+    if (!Hive.isAdapterRegistered(WaterAdapter().typeId)) {
+      Hive.registerAdapter(WaterAdapter());
+    }
 
     await Hive.openBox<Activity>(activitiesBoxName);
     await Hive.openBox<Steps>(stepsBoxName);
-    await Hive.openBox(settingsBoxName);
+    await Hive.openBox<UserSettings>(userSettingsBoxName);
     await Hive.openBox<Water>(waterBoxName);
-  }
 
-  // Settings
-  Box get _settingsBox => Hive.box(settingsBoxName);
-
-  UserSettings get userSettings {
-    final settings = _settingsBox.get('user_settings');
-    if (settings == null) {
-      final defaultSettings = UserSettings();
-      _settingsBox.put('user_settings', defaultSettings);
-      return defaultSettings;
+    // --- The Permanent Fix ---
+    // Ensure that a UserSettings object always exists.
+    final settingsBox = getUserSettingsBox();
+    if (settingsBox.get(userSettingsKey) == null) {
+      await settingsBox.put(userSettingsKey, UserSettings());
     }
-    return settings as UserSettings;
   }
 
-  Future<void> saveUserSettings(UserSettings settings) async {
-    await _settingsBox.put('user_settings', settings);
+  // --- Settings ---
+  // Static method to get the settings box for easy access from anywhere in the app.
+  static Box<UserSettings> getUserSettingsBox() {
+    return Hive.box<UserSettings>(userSettingsBoxName);
   }
 
-  // Activities
+  // --- Activities ---
   static Box<Activity> getActivitiesBox() {
     return Hive.box<Activity>(activitiesBoxName);
   }
@@ -63,7 +70,7 @@ class DatabaseService {
     await getActivitiesBox().delete(key);
   }
 
-  // Steps
+  // --- Steps ---
   Box<Steps> get _stepsBox => Hive.box<Steps>(stepsBoxName);
 
   Future<void> saveSteps(Steps steps) async {
@@ -75,7 +82,7 @@ class DatabaseService {
 
     if (existingEntry != null) {
       existingEntry.count = steps.count;
-      await _stepsBox.put(existingEntry.key, steps);
+      await _stepsBox.put(existingEntry.key, existingEntry);
     } else {
       await _stepsBox.add(steps);
     }
@@ -90,7 +97,7 @@ class DatabaseService {
         orElse: () => Steps(count: 0, date: date));
   }
 
-  // Water
+  // --- Water ---
   static Box<Water> getWaterBox() {
     return Hive.box<Water>(waterBoxName);
   }
@@ -105,24 +112,27 @@ class DatabaseService {
   }
 
   Future<void> saveWater(Water water) async {
-    final existingEntry = getWaterBox().values.firstWhereOrNull(
-        (w) =>
-            w.date.year == water.date.year &&
-            w.date.month == water.date.month &&
-            w.date.day == water.date.day);
+    final box = getWaterBox();
+    final existingEntry = box.values.firstWhereOrNull((w) => w.date.isAtSameMomentAs(water.date));
 
     if (existingEntry != null) {
-      existingEntry.milliliters = water.milliliters;
-      await getWaterBox().put(existingEntry.key, water);
+      // If an entry for the date exists, update it.
+      // Assuming Water object has a key property managed by Hive.
+      await box.put(existingEntry.key, water);
     } else {
-      await getWaterBox().add(water);
+      // If no entry exists for the date, add a new one.
+      await box.add(water);
     }
   }
 
   Future<void> deleteAllData() async {
     await getActivitiesBox().clear();
-    await _stepsBox.clear();
-    await _settingsBox.clear();
+    await Hive.box(stepsBoxName).clear();
     await getWaterBox().clear();
+    
+    // Also clear the settings box but immediately re-initialize it.
+    final settingsBox = getUserSettingsBox();
+    await settingsBox.clear();
+    await settingsBox.put(userSettingsKey, UserSettings());
   }
 }
